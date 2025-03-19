@@ -264,56 +264,82 @@ namespace ET.U3D.RES
                     var refCountMap = new Dictionary<string, int>();
                     var sourceAssets = new List<string>();
 
+                    // 处理 Include 规则
                     var includes = XPrefs.GetStrings(Prefs.Include, Prefs.IncludeDefault);
                     if (includes != null && includes.Length > 0)
                     {
                         foreach (var temp in includes)
                         {
-                            if (temp.Contains("*") || temp.Contains("?") || temp.Contains("["))
+                            if (temp.IndexOfAny(new char[] { '*', '?', '[' }) >= 0)
                             {
-                                var matcher = new Matcher();
-                                matcher.AddInclude(temp);
                                 var tempAssets = new List<string>();
-                                var rootDir = temp.Split('*', '?', '[')[0];
-                                rootDir = rootDir.TrimEnd('/');
+                                var rootDir = temp.Split('*', '?', '[')[0].TrimEnd('/', '\\');
+                                var partten = temp[rootDir.Length..].TrimStart('/', '\\');
+
                                 if (string.IsNullOrEmpty(rootDir)) rootDir = "Assets";
                                 XEditor.Utility.CollectAssets(rootDir, tempAssets, ".cs", ".js", ".meta", ".tpsheet", ".DS_Store", ".gitkeep", ".variant", ".hlsl", ".cginc", ".shadersubgraph");
+
+                                var matcher = new Matcher();
+                                matcher.AddInclude(partten);
+
                                 foreach (var asset in tempAssets)
                                 {
-                                    if (matcher.Match(asset).HasMatches)
-                                    {
-                                        sourceAssets.Add(asset);
-                                    }
+                                    var relativeAsset = XFile.NormalizePath(Path.GetRelativePath(rootDir, asset));
+                                    if (matcher.Match(relativeAsset).HasMatches) sourceAssets.Add(asset);
                                 }
                             }
                             else if (XFile.HasFile(temp)) sourceAssets.Add(temp);
-                            else if (XFile.HasDirectory(temp)) XEditor.Utility.CollectAssets(temp, sourceAssets, ".cs", ".js", ".meta", ".tpsheet", ".DS_Store", ".gitkeep", ".variant", ".hlsl", ".cginc", ".shadersubgraph");
+                            else if (XFile.HasDirectory(temp))
+                            {
+                                XEditor.Utility.CollectAssets(temp, sourceAssets, ".cs", ".js", ".meta", ".tpsheet", ".DS_Store", ".gitkeep", ".variant", ".hlsl", ".cginc", ".shadersubgraph");
+                            }
                         }
                     }
 
+                    // 处理 Exclude 规则
                     var excludes = XPrefs.GetStrings(Prefs.Exclude);
                     if (excludes != null && excludes.Length > 0)
                     {
-                        var matcher = new Matcher();
-                        matcher.AddInclude("**/*");
-                        foreach (var reg in excludes)
-                        {
-                            var str = reg.Trim();
-                            if (string.IsNullOrEmpty(str)) continue;
-                            matcher.AddExclude(str);
-                        }
                         for (var i = 0; i < sourceAssets.Count;)
                         {
-                            var file = sourceAssets[i];
-                            var ret = matcher.Match(file);
-                            if (!ret.HasMatches)
+                            var asset = sourceAssets[i];
+                            var remove = false;
+
+                            foreach (var exclude in excludes)
+                            {
+                                if (exclude.IndexOfAny(new char[] { '*', '?', '[' }) >= 0)
+                                {
+                                    var rootDir = exclude.Split('*', '?', '[')[0];
+                                    if (asset.StartsWith(rootDir)) // 判断文件是否匹配根目录
+                                    {
+                                        var partten = exclude[rootDir.Length..];
+                                        var matcher = new Matcher();
+                                        matcher.AddInclude(partten);
+
+                                        var relativeAsset = XFile.NormalizePath(Path.GetRelativePath(rootDir, asset));
+                                        if (matcher.Match(relativeAsset).HasMatches)
+                                        {
+                                            remove = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else if (exclude == asset)  // 文件路径完全匹配
+                                {
+                                    remove = true;
+                                    break;
+                                }
+                            }
+
+                            if (remove)
                             {
                                 sourceAssets.RemoveAt(i);
-                                XLog.Debug("XAsset.Build.GenDependency: {0} has been ignored by matcher.", file);
+                                XLog.Debug("XAsset.Build.GenDependency: {0} has been ignored by matcher.", asset);
                             }
-                            else { i++; }
+                            else i++;
                         }
                     }
+
                     var dependAssets = XEditor.Utility.CollectDependency(sourceAssets);
                     for (int i = 0; i < sourceAssets.Count; i++)
                     {
