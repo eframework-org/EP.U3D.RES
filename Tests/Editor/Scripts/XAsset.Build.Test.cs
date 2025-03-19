@@ -12,8 +12,6 @@ using System.Linq;
 using static ET.U3D.RES.XAsset;
 using static ET.U3D.RES.XAsset.Build;
 using UnityEngine.TestTools;
-using UnityEngine;
-using System.Text.RegularExpressions;
 using EP.U3D.RES;
 
 public class TestXAssetBuild : IPrebuildSetup
