@@ -22,10 +22,10 @@ public class TestXAssetPublish
     public void Process()
     {
         // 设置测试环境
-        XPrefs.Asset.Set(XAsset.Publish.Prefs.Host, "http://localhost:9000");
-        XPrefs.Asset.Set(XAsset.Publish.Prefs.Bucket, "default");
-        XPrefs.Asset.Set(XAsset.Publish.Prefs.Access, "admin");
-        XPrefs.Asset.Set(XAsset.Publish.Prefs.Secret, "adminadmin");
+        XPrefs.Asset.Set(XAsset.Publish.Prefs.Host, XAsset.Publish.Prefs.HostDefault.Eval(XEnv.Vars));
+        XPrefs.Asset.Set(XAsset.Publish.Prefs.Bucket, XAsset.Publish.Prefs.BucketDefault.Eval(XEnv.Vars));
+        XPrefs.Asset.Set(XAsset.Publish.Prefs.Access, XAsset.Publish.Prefs.AccessDefault.Eval(XEnv.Vars));
+        XPrefs.Asset.Set(XAsset.Publish.Prefs.Secret, XAsset.Publish.Prefs.SecretDefault.Eval(XEnv.Vars));
         XPrefs.Asset.Set(XAsset.Publish.Prefs.LocalUri, "Assets");
         XPrefs.Asset.Set(XAsset.Publish.Prefs.RemoteUri, $"TestXAssetPublish/Builds-{XTime.GetMillisecond()}/Assets");
 
