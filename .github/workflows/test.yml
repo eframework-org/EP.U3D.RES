@@ -44,19 +44,22 @@ jobs:
 
       - name: 设置 MinIO 环境
         run: |
-          # 启动 MinIO 容器
-          docker run -d --name minio -p 9000:9000 -p 9090:9090 --restart=always \
+          # 获取主机 IP 用于 MinIO 访问
+          HOST_IP=$(hostname -I | awk '{print $1}')
+          echo "HOST_IP=$HOST_IP" >> $GITHUB_ENV
+          
+          # 启动 MinIO 容器，绑定到主机 IP
+          docker run -d --name minio -p $HOST_IP:9000:9000 -p $HOST_IP:9090:9090 --restart=always \
             -e "MINIO_ACCESS_KEY=admin" -e "MINIO_SECRET_KEY=adminadmin" \
             minio/minio server /data --console-address ":9090" --address ":9000"
           
           # 等待 MinIO 服务启动
           echo "等待 MinIO 服务启动..."
-          # 使用更可靠的方式等待服务就绪
           max_retries=30
           retry_interval=2
           retry_count=0
           
-          until curl -s --head http://localhost:9000/minio/health/ready || [ $retry_count -eq $max_retries ]; do
+          until curl -s --head http://$HOST_IP:9000/minio/health/ready || [ $retry_count -eq $max_retries ]; do
             echo "等待 MinIO 服务就绪... (尝试 $retry_count/$max_retries)"
             sleep $retry_interval
             retry_count=$((retry_count+1))
@@ -75,11 +78,17 @@ jobs:
           chmod +x mc
           
           # 配置 MinIO 客户端
-          ./mc alias set myminio http://localhost:9000 admin adminadmin
+          ./mc alias set myminio http://$HOST_IP:9000 admin adminadmin
           
           # 创建 default bucket 并设置为公开访问
           ./mc mb myminio/default
           ./mc anonymous set public myminio/default
+          
+          # 输出环境变量供测试使用
+          echo "MINIO_ENDPOINT=http://$HOST_IP:9000" >> $GITHUB_ENV
+          echo "MINIO_BUCKET=default" >> $GITHUB_ENV
+          echo "MINIO_ACCESS_KEY=admin" >> $GITHUB_ENV
+          echo "MINIO_SECRET_KEY=adminadmin" >> $GITHUB_ENV
           
           echo "MinIO 环境设置完成，default bucket 已创建并设置为公开访问"
 
@@ -90,6 +99,10 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          OssHost: ${{ env.MINIO_ENDPOINT }}
+          OssBucket: ${{ env.MINIO_BUCKET }}
+          OssAccess: ${{ env.MINIO_ACCESS_KEY }}
+          OssSecret: ${{ env.MINIO_SECRET_KEY }}
         with:
           packageMode: true
           projectPath: ${{ matrix.projectPath }}
