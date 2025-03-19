@@ -46,7 +46,7 @@ jobs:
         run: |
           # 创建共享网络以便容器间通信
           docker network create shared-network
-          echo "已创建 Docker 共享网络: shared-network"
+          echo "已创建共享网络: shared-network"
 
       - name: 设置 MinIO 环境
         run: |
@@ -61,7 +61,7 @@ jobs:
           retry_interval=2
           retry_count=0
           
-          until curl -s --head http://minio:9000/minio/health/ready || [ $retry_count -eq $max_retries ]; do
+          until curl -s --head http://localhost:9000/minio/health/ready || [ $retry_count -eq $max_retries ]; do
             echo "等待 MinIO 服务就绪... (尝试 $retry_count/$max_retries)"
             sleep $retry_interval
             retry_count=$((retry_count+1))
@@ -80,7 +80,7 @@ jobs:
           chmod +x mc
           
           # 配置 MinIO 客户端
-          ./mc alias set myminio http://minio:9000 admin adminadmin
+          ./mc alias set myminio http://localhost:9000 admin adminadmin
           
           # 创建 default bucket 并设置为公开访问
           ./mc mb myminio/default
