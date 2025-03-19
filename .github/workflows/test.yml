@@ -42,16 +42,10 @@ jobs:
           lfs: true
           path: Package
 
-      - name: 设置 Docker 网络
-        run: |
-          # 创建共享网络以便容器间通信
-          docker network create shared-network
-          echo "已创建共享网络: shared-network"
-
       - name: 设置 MinIO 环境
         run: |
-          # 启动 MinIO 容器并连接到网络
-          docker run -d --name minio --network shared-network -p 9000:9000 -p 9090:9090 --restart=always \
+          # 启动 MinIO 容器
+          docker run -d --name minio -p 9000:9000 -p 9090:9090 --restart=always \
             -e "MINIO_ACCESS_KEY=admin" -e "MINIO_SECRET_KEY=adminadmin" \
             minio/minio server /data --console-address ":9090" --address ":9000"
           
@@ -95,10 +89,6 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          OssHost: http://minio:9000
-          OssBucket: default
-          OssAccess: admin
-          OssSecret: adminadmin
         with:
           packageMode: true
           projectPath: ${{ matrix.projectPath }}
@@ -110,7 +100,7 @@ jobs:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: ${{ matrix.testMode }} Test Results
           coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
-          dockerOptions: --network shared-network
+          useHostNetwork: true
 
       - name: 上传报告
         uses: actions/upload-artifact@v4
