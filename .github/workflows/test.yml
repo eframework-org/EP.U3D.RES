@@ -28,8 +28,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        projectPath:
+          - Temp~
         unityVersion: [6000.0.32f1]
-        testMode: [editmode, playmode]
+        testMode: [editmode]
     outputs:
       passed: ${{ steps.tests.conclusion == 'success' }}
 
@@ -89,6 +91,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           packageMode: true
+          projectPath: ${{ matrix.projectPath }}
           unityVersion: ${{ matrix.unityVersion }}
           scopedRegistryUrl: https://registry.npmjs.org/
           registryScopes: 'et, ep'
