@@ -1,0 +1,21 @@
+{
+    "name": "EP.U3D.RES.TEST",
+    "rootNamespace": "",
+    "references": [
+        "EP.U3D.UTIL",
+        "ET.U3D.UTIL",
+        "EP.U3D.RES",
+        "ET.U3D.RES",
+        "ET.U3D.RES.TEST",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,30 @@
+{
+  "name": "ep.u3d.res",
+  "displayName": "EP.U3D.RES",
+  "description": "EP.U3D.RES 提供了一套完整的资源管理解决方案，实现了从资源打包发布到运行时加载的全流程管理，支持资源加载、引用计数、自动卸载等特性。",
+  "version": "0.0.1",
+  "unity": "2021.3",
+  "license": "MIT",
+  "author": "eframework-org",
+  "homepage": "https://github.com/eframework-org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eframework-org/EP.U3D.RES.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eframework-org/EP.U3D.RES/issues"
+  },
+  "keywords": [
+    "eframework",
+    "package",
+    "unity",
+    "resource"
+  ],
+  "dependencies": {
+    "ep.u3d.util": "0.0.3",
+    "et.u3d.util": "0.0.1"
+  },
+  "puerExports": [
+    "EP.U3D.RES"
+  ]
+}
